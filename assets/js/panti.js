@@ -1,8 +1,4 @@
-// =====================================================
-// SIDOTI - Halaman Info Panti (publik)
-// =====================================================
 let semuaPanti = [];
-let terkumpulMap = {};
 
 document.addEventListener('DOMContentLoaded', async () => {
   await renderNavbar();
@@ -14,40 +10,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadPanti() {
   try {
-    const { data, error } = await window.sb
-      .from('panti')
-      .select('id, nama_panti, deskripsi, kebutuhan, foto, kota, kategori, target_dana')
-      .order('nama_panti', { ascending: true });
-    if (error) throw error;
-    semuaPanti = data || [];
+    semuaPanti = await window.api.get('/public.php?action=panti');
 
-    // Isi filter kategori dari data
     const kategori = [...new Set(semuaPanti.map(p => p.kategori).filter(Boolean))];
     const sel = document.getElementById('filter-kategori');
     kategori.forEach(k => {
-      const opt = document.createElement('option');
-      opt.value = k; opt.textContent = k;
-      sel.appendChild(opt);
+      if (![...sel.options].some(o => o.value === k)) {
+        const opt = document.createElement('option');
+        opt.value = k; opt.textContent = k;
+        sel.appendChild(opt);
+      }
     });
 
-    // Ambil dana terkumpul untuk setiap panti
-    await loadTerkumpul();
     renderPanti();
   } catch (err) {
     console.error('[Panti] Gagal memuat:', err);
-    document.getElementById('panti-list').innerHTML =
-      '<p class="muted">Gagal memuat data panti.</p>';
-  }
-}
-
-async function loadTerkumpul() {
-  for (const p of semuaPanti) {
-    try {
-      const { data } = await window.sb.rpc('panti_terkumpul', { p_panti_id: p.id });
-      terkumpulMap[p.id] = Number(data) || 0;
-    } catch {
-      terkumpulMap[p.id] = 0;
-    }
+    document.getElementById('panti-list').innerHTML = '<p class="muted">Gagal memuat data panti.</p>';
   }
 }
 
@@ -70,7 +48,7 @@ function renderPanti() {
   }
 
   list.innerHTML = filtered.map(p => {
-    const terkumpul = terkumpulMap[p.id] || 0;
+    const terkumpul = Number(p.terkumpul) || 0;
     const persen = p.target_dana > 0 ? Math.min(100, (terkumpul / p.target_dana) * 100) : 0;
     return `<div class="panti-card">
       ${p.foto

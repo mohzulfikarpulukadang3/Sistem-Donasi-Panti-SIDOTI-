@@ -1,6 +1,3 @@
-// =====================================================
-// SIDOTI - Halaman Login & Registrasi
-// =====================================================
 document.addEventListener('DOMContentLoaded', async () => {
   await renderNavbar();
 
@@ -12,7 +9,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   tabLogin.addEventListener('click', () => setTab('login'));
   tabRegister.addEventListener('click', () => setTab('register'));
   
-  // Tab switcher di bawah
   document.getElementById('switch-tab').addEventListener('click', (e) => {
     e.preventDefault();
     const isLogin = document.getElementById('form-login').style.display !== 'none';
@@ -21,17 +17,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   formLogin.addEventListener('submit', onLogin);
   formRegister.addEventListener('submit', onRegister);
-  document.getElementById('btn-google').addEventListener('click', onGoogleLogin);
   
-  // Password toggle
+  const btnGoogle = document.getElementById('btn-google');
+  if (btnGoogle) {
+    btnGoogle.addEventListener('click', () => {
+      showAlert('info', 'Login Google OAuth hanya tersedia saat menggunakan Supabase. Silakan masuk dengan Email & Password.');
+    });
+  }
+  
   document.getElementById('toggle-password').addEventListener('click', (e) => {
     e.preventDefault();
     const input = document.getElementById('login-password');
-    if (input.type === 'password') {
-      input.type = 'text';
-    } else {
-      input.type = 'password';
-    }
+    input.type = input.type === 'password' ? 'text' : 'password';
   });
 });
 
@@ -44,7 +41,6 @@ function setTab(which) {
   const switchText = document.getElementById('switch-text');
   const isLogin = which === 'login';
   
-  // Update tab active state
   tabLogin.style.background = isLogin ? 'var(--surface)' : 'transparent';
   tabLogin.style.color = isLogin ? 'var(--primary)' : 'var(--slate)';
   tabLogin.style.boxShadow = isLogin ? '0 1px 3px rgba(0, 0, 0, 0.05)' : 'none';
@@ -53,22 +49,17 @@ function setTab(which) {
   tabRegister.style.color = !isLogin ? 'var(--primary)' : 'var(--slate)';
   tabRegister.style.boxShadow = !isLogin ? '0 1px 3px rgba(0, 0, 0, 0.05)' : 'none';
   
-  // Update form visibility
   formLogin.style.display = isLogin ? 'block' : 'none';
   formRegister.style.display = isLogin ? 'none' : 'block';
   
-  // Update switch text
   switchText.textContent = isLogin ? 'Belum punya akun?' : 'Sudah punya akun?';
   switchTab.textContent = isLogin ? 'Daftar sekarang' : 'Masuk di sini';
-  
   clearAlert();
 }
 
 function showAlert(type, msg) {
-  const box = document.getElementById('alert-box');
-  box.innerHTML = `<div class="alert alert-${type}">${escapeHtml(msg)}</div>`;
+  document.getElementById('alert-box').innerHTML = `<div class="alert alert-${type}">${escapeHtml(msg)}</div>`;
 }
-
 function clearAlert() {
   document.getElementById('alert-box').innerHTML = '';
 }
@@ -79,9 +70,6 @@ function redirectAfterAuth() {
   window.location.href = target || '/riwayat.html';
 }
 
-// -----------------------------------------------------
-// Login email/password
-// -----------------------------------------------------
 async function onLogin(e) {
   e.preventDefault();
   clearAlert();
@@ -91,19 +79,15 @@ async function onLogin(e) {
   btn.disabled = true;
   btn.textContent = 'Memproses...';
   try {
-    const { data, error } = await window.sb.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    await window.api.post('/auth.php?action=login', { email, password });
     redirectAfterAuth();
   } catch (err) {
-    showAlert('error', 'Login gagal: ' + (err.message || 'email atau password salah'));
+    showAlert('error', 'Login gagal: ' + err.message);
     btn.disabled = false;
     btn.textContent = 'Masuk';
   }
 }
 
-// -----------------------------------------------------
-// Registrasi email/password
-// -----------------------------------------------------
 async function onRegister(e) {
   e.preventDefault();
   clearAlert();
@@ -114,41 +98,11 @@ async function onRegister(e) {
   btn.disabled = true;
   btn.textContent = 'Memproses...';
   try {
-    const { data, error } = await window.sb.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: nama, provider: 'email' } }
-    });
-    if (error) throw error;
-
-    // Jika konfirmasi email diperlukan, Supabase tidak membuat sesi.
-    if (!data.session) {
-      showAlert('success',
-        'Pendaftaran berhasil! Silakan cek email untuk verifikasi, lalu masuk.');
-      setTab('login'); // beralih ke tab login
-    } else {
-      redirectAfterAuth();
-    }
+    await window.api.post('/auth.php?action=register', { nama, email, password });
+    redirectAfterAuth();
   } catch (err) {
-    showAlert('error', 'Pendaftaran gagal: ' + (err.message || 'email sudah terdaftar'));
-  } finally {
+    showAlert('error', 'Pendaftaran gagal: ' + err.message);
     btn.disabled = false;
     btn.textContent = 'Daftar';
-  }
-}
-
-// -----------------------------------------------------
-// Login Google (OAuth via Supabase)
-// -----------------------------------------------------
-async function onGoogleLogin() {
-  clearAlert();
-  try {
-    const { error } = await window.sb.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin + '/' }
-    });
-    if (error) throw error;
-  } catch (err) {
-    showAlert('error', 'Login Google gagal: ' + (err.message || 'terjadi kesalahan'));
   }
 }

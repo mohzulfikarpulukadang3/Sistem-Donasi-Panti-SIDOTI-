@@ -1,6 +1,3 @@
-// =====================================================
-// SIDOTI - Kelola Panti (Admin CRUD)
-// =====================================================
 let daftarPanti = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -23,12 +20,7 @@ function bindForm() {
 async function loadPanti() {
   const body = document.getElementById('panti-body');
   try {
-    const { data, error } = await window.sb
-      .from('panti')
-      .select('id, nama_panti, kota, kategori, target_dana, deskripsi, kebutuhan, foto')
-      .order('nama_panti', { ascending: true });
-    if (error) throw error;
-    daftarPanti = data || [];
+    daftarPanti = await window.api.get('/admin.php?action=panti_list');
     renderTabel();
   } catch (err) {
     console.error('[KelolaPanti] Gagal memuat:', err);
@@ -36,19 +28,11 @@ async function loadPanti() {
   }
 }
 
-async function renderTabel() {
+function renderTabel() {
   const body = document.getElementById('panti-body');
   if (!daftarPanti.length) {
     body.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="emoji">🏠</div><p>Belum ada panti. Klik "Tambah Panti".</p></div></td></tr>';
     return;
-  }
-  // Ambil terkumpul per panti
-  const terkumpulMap = {};
-  for (const p of daftarPanti) {
-    try {
-      const { data } = await window.sb.rpc('panti_terkumpul', { p_panti_id: p.id });
-      terkumpulMap[p.id] = Number(data) || 0;
-    } catch { terkumpulMap[p.id] = 0; }
   }
 
   body.innerHTML = daftarPanti.map(p => `<tr>
@@ -56,7 +40,7 @@ async function renderTabel() {
     <td>${escapeHtml(p.kota || '-')}</td>
     <td>${escapeHtml(p.kategori || '-')}</td>
     <td>${formatRupiah(p.target_dana)}</td>
-    <td>${formatRupiah(terkumpulMap[p.id] || 0)}</td>
+    <td>${formatRupiah(p.terkumpul || 0)}</td>
     <td>
       <button class="btn btn-outline btn-sm" onclick="editPanti(${p.id})">Edit</button>
       <button class="btn btn-danger btn-sm" onclick="hapusPanti(${p.id})">Hapus</button>
@@ -78,7 +62,7 @@ function tutupForm() {
 }
 
 function editPanti(id) {
-  const p = daftarPanti.find(x => x.id === id);
+  const p = daftarPanti.find(x => Number(x.id) === Number(id));
   if (!p) return;
   document.getElementById('form-title').textContent = 'Edit Panti';
   document.getElementById('panti-id').value = p.id;
@@ -95,10 +79,9 @@ function editPanti(id) {
 }
 
 async function hapusPanti(id) {
-  if (!confirm('Yakin menghapus panti ini? Donasi yang sudah ada tetap tersimpan.')) return;
+  if (!confirm('Yakin menghapus panti ini?')) return;
   try {
-    const { error } = await window.sb.from('panti').delete().eq('id', id);
-    if (error) throw error;
+    await window.api.post('/admin.php?action=panti_delete', { id });
     showAlert('success', 'Panti dihapus.');
     await loadPanti();
   } catch (err) {
@@ -110,6 +93,7 @@ async function onSubmitPanti(e) {
   e.preventDefault();
   const id = document.getElementById('panti-id').value;
   const payload = {
+    id: id ? Number(id) : 0,
     nama_panti: document.getElementById('nama_panti').value.trim(),
     kota: document.getElementById('kota').value.trim() || null,
     kategori: document.getElementById('kategori').value.trim() || null,
@@ -123,13 +107,7 @@ async function onSubmitPanti(e) {
   const btn = document.getElementById('btn-simpan');
   btn.disabled = true; btn.textContent = 'Menyimpan...';
   try {
-    let error;
-    if (id) {
-      ({ error } = await window.sb.from('panti').update(payload).eq('id', id));
-    } else {
-      ({ error } = await window.sb.from('panti').insert(payload));
-    }
-    if (error) throw error;
+    await window.api.post('/admin.php?action=panti_save', payload);
     showAlert('success', id ? 'Panti diperbarui.' : 'Panti ditambahkan.');
     tutupForm();
     await loadPanti();

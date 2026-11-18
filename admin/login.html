@@ -4,110 +4,108 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login Admin - SIDOTI</title>
+  <link rel="icon" type="image/jpeg" href="/assets/img/logo-sidoti.jpg" />
   <link rel="stylesheet" href="/assets/css/style.css" />
+  <style>
+    .admin-login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .admin-login-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 36px 32px;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.92);
+      border-radius: 24px;
+      box-shadow: 0 12px 40px rgba(31, 38, 135, 0.08);
+    }
+  </style>
 </head>
 <body>
-  <header id="navbar"></header>
-
-  <!-- Main content: centered card -->
-  <div style="
-    background: var(--bg-page);
-    min-height: calc(100vh - 80px - 80px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 32px 24px;
-  ">
-    <div class="card" style="
-      max-width: 480px;
-      width: 100%;
-      padding: 32px;
-    ">
-      <!-- Heading -->
-      <div style="text-align: center; margin-bottom: 32px;">
-        <h1 style="font-size: 28px;">Login Admin</h1>
-        <p style="font-size: 14px; color: var(--slate); line-height: 1.6; margin-top: 8px;">
-          Khusus pengurus dan pengelola panti asuhan.
-        </p>
+  <main class="admin-login-page">
+    <div class="admin-login-card">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <img src="/assets/img/logo-sidoti.jpg" alt="Logo SIDOTI" style="width: 52px; height: 52px; object-fit: cover; border-radius: 14px; margin: 0 auto 12px; box-shadow: 0 4px 14px rgba(79, 110, 247, 0.2);" />
+        <h1 style="font-size: 24px; margin-bottom: 6px;">Panel Admin SIDOTI</h1>
+        <p style="font-size: 13px; color: var(--slate); margin: 0;">Masuk untuk mengelola panti asuhan & verifikasi donasi.</p>
       </div>
 
-      <!-- Alert Box -->
-      <div id="alert-box" style="margin-bottom: 16px;"></div>
+      <div id="admin-login-alert" class="alert hidden"></div>
 
-      <!-- Form Login -->
       <form id="form-admin-login">
         <div class="form-group">
-          <label for="email">Email Admin</label>
+          <label for="admin-email">Email Admin</label>
           <div class="input-wrapper with-left-icon">
             <svg class="input-icon left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
             </svg>
-            <input
-              type="email"
-              id="email"
-              placeholder="admin@sidoti.local"
-              required
-              autocomplete="email"
-            />
+            <input type="email" id="admin-email" placeholder="admin@sidoti.test" required />
           </div>
         </div>
 
         <div class="form-group">
-          <label for="password">Password</label>
+          <label for="admin-password">Password</label>
           <div class="input-wrapper with-left-icon">
             <svg class="input-icon left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
-            <input
-              type="password"
-              id="password"
-              placeholder="Masukkan password"
-              required
-              autocomplete="current-password"
-              minlength="6"
-            />
+            <input type="password" id="admin-password" placeholder="Masukkan password admin" required />
           </div>
         </div>
 
-        <button type="submit" id="btn-login" class="btn btn-primary lg">Masuk</button>
+        <button type="submit" id="btn-admin-login" class="btn btn-primary lg" style="margin-top: 8px;">Masuk ke Dashboard</button>
       </form>
 
-      <!-- Info Alert -->
-      <div style="
-        background: var(--primary-tint);
-        border-radius: var(--radius-md);
-        padding: 12px 16px;
-        margin: 20px 0;
-        font-size: 13px;
-        color: var(--primary);
-      ">
-        <strong>Catatan:</strong> Akun admin dibuat manual oleh pengelola. Donatur tidak bisa mendaftar menjadi admin.
-      </div>
-
-      <!-- Link ke donor login -->
-      <p style="text-align: center; font-size: 13px; color: var(--slate); margin-top: 20px;">
-        Donatur? <a href="/login.html" style="color: var(--primary); font-weight: 600;">Login di sini</a>
-      </p>
-    </div>
-  </div>
-
-  <footer class="footer" style="margin-top: 40px;">
-    <div class="container">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div class="footer-left">© 2026 SIDOTI. Bersama, hadirkan lebih banyak kebaikan.</div>
-        <div class="footer-right">
-          <a href="#" class="footer-link">Kebijakan Privasi</a>
-          <a href="#" class="footer-link">Hubungi Kami</a>
-        </div>
+      <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-subtle); font-size: 13px;">
+        <a href="/login.html" style="color: var(--slate); font-weight: 600;">← Kembali ke Login Donatur</a>
       </div>
     </div>
-  </footer>
+  </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/assets/js/config.js"></script>
   <script src="/assets/js/supabase.js"></script>
   <script src="/assets/js/auth.js"></script>
-  <script src="/assets/js/admin/login.js"></script>
+  <script>
+    document.getElementById('form-admin-login').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-admin-login');
+      const alertBox = document.getElementById('admin-login-alert');
+      alertBox.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Memproses...';
+
+      try {
+        const res = await fetch(`${window.SIDOTI_CONFIG.API_BASE_URL}/auth.php?action=login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('admin-email').value.trim(),
+            password: document.getElementById('admin-password').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || 'Email atau password admin salah');
+        if (data.user && data.user.role !== 'admin') throw new Error('Akun ini tidak memiliki akses administrator.');
+
+        localStorage.setItem('sidoti_user', JSON.stringify(data.user));
+        if (data.token) localStorage.setItem('sidoti_token', data.token);
+        window.location.href = '/admin/';
+      } catch (err) {
+        alertBox.className = 'alert alert-error';
+        alertBox.textContent = err.message;
+        alertBox.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Masuk ke Dashboard';
+      }
+    });
+  </script>
 </body>
 </html>
-

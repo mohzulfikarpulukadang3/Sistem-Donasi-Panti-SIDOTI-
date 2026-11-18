@@ -1,6 +1,3 @@
-// =====================================================
-// SIDOTI - Halaman Laporan Dana (publik, hanya yang terpublikasi)
-// =====================================================
 document.addEventListener('DOMContentLoaded', async () => {
   await renderNavbar();
   await loadLaporan();
@@ -9,13 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadLaporan() {
   const list = document.getElementById('laporan-list');
   try {
-    // RLS hanya mengembalikan laporan dengan dipublikasi=true untuk publik
-    const { data, error } = await window.sb
-      .from('laporan')
-      .select('id, periode, total_donasi, rincian_penggunaan, tanggal_publikasi')
-      .eq('dipublikasi', true)
-      .order('tanggal_publikasi', { ascending: false });
-    if (error) throw error;
+    const data = await window.api.get('/public.php?action=laporan');
 
     if (!data || !data.length) {
       list.innerHTML = `<div class="card empty-state">

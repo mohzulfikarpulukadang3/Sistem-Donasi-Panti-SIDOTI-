@@ -3,84 +3,85 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Masuk / Daftar - SIDOTI</title>
+  <title>Masuk / Buat Akun - SIDOTI</title>
+  <link rel="icon" type="image/jpeg" href="/assets/img/logo-sidoti.jpg" />
   <link rel="stylesheet" href="/assets/css/style.css" />
+  <style>
+    .auth-wrapper {
+      min-height: calc(100vh - 160px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .auth-glass-card {
+      max-width: 460px;
+      width: 100%;
+      padding: 36px 32px;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.92);
+      border-radius: 24px;
+      box-shadow: 0 12px 40px rgba(31, 38, 135, 0.08);
+    }
+
+    .auth-tabs-box {
+      display: flex;
+      gap: 6px;
+      background: rgba(226, 232, 240, 0.6);
+      border-radius: 14px;
+      padding: 5px;
+      margin-bottom: 24px;
+    }
+
+    .auth-tab-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--slate);
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .auth-tab-btn.active {
+      background: #FFFFFF;
+      color: var(--primary);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    }
+
+    .auth-remember-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 14px 0 22px;
+      font-size: 13px;
+    }
+  </style>
 </head>
 <body>
   <header id="navbar"></header>
 
-  <!-- Main content: centered card -->
-  <div style="
-    background: var(--bg-page);
-    min-height: calc(100vh - 80px - 80px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 32px 24px;
-  ">
-    <div class="card" style="
-      max-width: 480px;
-      width: 100%;
-      padding: 32px;
-    ">
-      <!-- Heading -->
-      <div style="text-align: center; margin-bottom: 32px;">
-        <h1 style="font-size: 28px;">Selamat datang kembali</h1>
-        <p style="font-size: 14px; color: var(--slate); line-height: 1.6; margin-top: 8px;">
-          Masuk dan lanjutkan langkah kecil Anda untuk berbagi kebahagiaan.
+  <main class="auth-wrapper">
+    <div class="auth-glass-card">
+      <div style="text-align: center; margin-bottom: 26px;">
+        <h1 style="font-size: 26px; margin-bottom: 8px;">Selamat datang</h1>
+        <p style="font-size: 13px; color: var(--slate); line-height: 1.6; margin: 0;">
+          Masuk atau buat akun untuk melanjutkan langkah kecil berbagi kebahagiaan.
         </p>
       </div>
 
-      <!-- Tab Segmented -->
-      <div style="
-        display: flex;
-        gap: 8px;
-        background: #F0F4F8;
-        border-radius: var(--radius-md);
-        padding: 4px;
-        margin-bottom: 24px;
-      ">
-        <button
-          id="tab-login"
-          type="button"
-          class="active"
-          style="
-            flex: 1;
-            padding: 10px 16px;
-            border: none;
-            border-radius: 8px;
-            background: var(--surface);
-            color: var(--primary);
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s;
-          "
-        >
-          Masuk
-        </button>
-        <button
-          id="tab-register"
-          type="button"
-          style="
-            flex: 1;
-            padding: 10px 16px;
-            border: none;
-            border-radius: 8px;
-            background: transparent;
-            color: var(--slate);
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-          "
-        >
-          Daftar
-        </button>
+      <div class="auth-tabs-box">
+        <button id="tab-login" type="button" class="auth-tab-btn active">Masuk</button>
+        <button id="tab-register" type="button" class="auth-tab-btn">Buat Akun</button>
       </div>
 
-      <!-- Alert Box -->
       <div id="alert-box" style="margin-bottom: 16px;"></div>
 
       <!-- Form Login -->
@@ -103,7 +104,7 @@
 
         <div class="form-group">
           <label for="login-password">Password</label>
-          <div class="input-wrapper with-right-icon">
+          <div class="input-wrapper with-left-icon with-right-icon">
             <svg class="input-icon left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
@@ -121,10 +122,12 @@
           </div>
         </div>
 
-        <div class="checkbox-group">
-          <input type="checkbox" id="remember" />
-          <label for="remember">Ingat saya</label>
-          <a href="#" style="margin-left: auto; font-size: 13px; color: var(--primary); font-weight: 600;">
+        <div class="auth-remember-row">
+          <div class="checkbox-group" style="margin: 0;">
+            <input type="checkbox" id="remember" />
+            <label for="remember">Ingat saya</label>
+          </div>
+          <a href="#" onclick="alert('Silakan hubungi admin SIDOTI untuk reset password.'); return false;" style="color: var(--primary); font-weight: 600;">
             Lupa password?
           </a>
         </div>
@@ -132,17 +135,22 @@
         <button type="submit" id="btn-login" class="btn btn-primary lg">Masuk</button>
       </form>
 
-      <!-- Form Register (hidden by default) -->
+      <!-- Form Register -->
       <form id="form-register" style="display: none;">
         <div class="form-group">
           <label for="reg-nama">Nama Lengkap</label>
-          <input
-            type="text"
-            id="reg-nama"
-            placeholder="Masukkan nama lengkap"
-            required
-            minlength="2"
-          />
+          <div class="input-wrapper with-left-icon">
+            <svg class="input-icon left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <input
+              type="text"
+              id="reg-nama"
+              placeholder="Masukkan nama lengkap"
+              required
+              minlength="2"
+            />
+          </div>
         </div>
 
         <div class="form-group">
@@ -178,73 +186,33 @@
           </div>
         </div>
 
-        <button type="submit" id="btn-register" class="btn btn-primary lg">Daftar</button>
+        <button type="submit" id="btn-register" class="btn btn-primary lg">Buat Akun</button>
       </form>
 
-      <!-- Divider -->
-      <div class="divider" style="margin: 20px 0;">atau</div>
-
-      <!-- Google Button -->
-      <button type="button" id="btn-google" class="btn btn-outline full" style="
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-      ">
-        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.4 1.1 7.3 2.8l5.7-5.7C33.5 6.1 28.9 4 24 4 13.5 4 5 12.5 5 23s8.5 19 19 19c10.9 0 19-7.9 19-19 0-1.1-.1-2-.4-2.5z"/>
-          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c2.8 0 5.4 1.1 7.3 2.8l5.7-5.7C33.5 6.1 28.9 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
-          <path fill="#4CAF50" d="M24 42c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.2 33 26.7 34 24 34c-5.3 0-9.7-2.6-11.3-7l-6.5 5C9.6 38.6 16.3 42 24 42z"/>
-          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.1 4-3.9 5.5l6.3 5.3C40.9 36 44 30.9 44 24c0-1.1-.1-2-.4-2.5z"/>
-        </svg>
-        <span>Lanjutkan dengan Google</span>
-      </button>
-
-      <!-- Sign up / Login switch -->
-      <p style="text-align: center; font-size: 13px; color: var(--slate); margin-top: 20px;">
+      <p style="text-align: center; font-size: 13px; color: var(--slate); margin-top: 22px;">
         <span id="switch-text">Belum punya akun?</span>
-        <a id="switch-tab" href="#" style="color: var(--primary); font-weight: 600;">Daftar sekarang</a>
+        <a id="switch-tab" href="#" style="color: var(--primary); font-weight: 700;">Daftar sekarang</a>
       </p>
 
-      <!-- Admin link -->
-      <p style="text-align: center; font-size: 12px; color: var(--slate-light); margin-top: 12px;">
-        Admin? <a href="/admin/login.html" style="color: var(--primary); text-decoration: underline;">Masuk di sini</a>
-      </p>
+      <div style="text-align: center; font-size: 12px; color: var(--slate); margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
+        Pengelola / Admin? <a href="/admin/login.html" style="color: var(--primary); font-weight: 700;">Masuk ke Panel Admin →</a>
+      </div>
     </div>
-  </div>
+  </main>
 
-  <!-- Security note below card -->
-  <div style="
-    text-align: center;
-    padding: 20px 24px;
-    font-size: 13px;
-    color: var(--slate-light);
-  ">
-    <svg style="width: 16px; height: 16px; display: inline; margin-right: 6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-    </svg>
-    Data Anda aman. Kebaikan Anda berarti.
-  </div>
-
-  <footer class="footer" style="margin-top: 40px;">
+  <footer class="footer" style="margin-top: 24px;">
     <div class="container">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div class="footer-left">© 2026 SIDOTI. Bersama, hadirkan lebih banyak kebaikan.</div>
-        <div class="footer-right">
-          <a href="#" class="footer-link">Kebijakan Privasi</a>
-          <a href="#" class="footer-link">Hubungi Kami</a>
-        </div>
+      <div class="footer-left">© 2026 SIDOTI. Bersama, hadirkan lebih banyak kebaikan.</div>
+      <div class="footer-right">
+        <a href="#" class="footer-link">Kebijakan Privasi</a>
+        <a href="#" class="footer-link">Hubungi Kami</a>
       </div>
     </div>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/assets/js/config.js"></script>
   <script src="/assets/js/supabase.js"></script>
   <script src="/assets/js/auth.js"></script>
   <script src="/assets/js/login.js"></script>
 </body>
 </html>
-

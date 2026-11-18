@@ -1,6 +1,3 @@
-// =====================================================
-// SIDOTI - Verifikasi Donasi (Admin)
-// =====================================================
 let semuaDonasi = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -16,12 +13,7 @@ function showAlert(type, msg) {
 
 async function loadDonasi() {
   try {
-    console.log('[Verifikasi] Loading donasi...');
-    
-    // Load dari shared function (same source as dashboard)
     semuaDonasi = await loadDonasiFromDatabase();
-    
-    console.log('[Verifikasi] Loaded', semuaDonasi.length, 'donasi');
     renderTabel();
   } catch (err) {
     console.error('[Verifikasi] Gagal memuat:', err);
@@ -34,17 +26,12 @@ function renderTabel() {
   const status = document.getElementById('filter-status').value;
   let list = semuaDonasi;
   
-  console.log('[renderTabel] Start - filter status:', status, 'total semuaDonasi:', semuaDonasi.length);
-  
   if (status) list = list.filter(d => d.status_bayar === status);
-  
-  console.log('[renderTabel] After filter - list length:', list.length, 'list:', list.map(d => ({id: d.id, status: d.status_bayar})));
 
   if (!list.length) {
     body.innerHTML = `<tr><td colspan="7"><div class="empty-state">
       <div class="emoji">✅</div><p>Tidak ada donasi dengan status ini.</p>
     </div></td></tr>`;
-    console.log('[renderTabel] Empty list, showing empty-state');
     return;
   }
 
@@ -53,12 +40,6 @@ function renderTabel() {
     const namaDonatur = d.anonim ? 'Anonim' : (donatur.nama || '-');
     const panti = d.panti?.nama_panti || '-';
     const bayar = (d.pembayaran && d.pembayaran[0]) || null;
-    
-    // Debug log
-    console.log(`[renderTabel] Rendering donasi #${d.id}:`, {
-      status: d.status_bayar,
-      donatur: namaDonatur
-    });
     
     const buktiCell = bayar && bayar.bukti && bayar.bukti.trim()
       ? `<button class="btn btn-ghost btn-sm" onclick="previewBukti('${escapeHtml(bayar.bukti)}')">Lihat</button>`
@@ -82,89 +63,39 @@ function renderTabel() {
       <td>${aksi}</td>
     </tr>`;
   }).join('');
-  
-  console.log('[renderTabel] Done rendering');
+}
 
-// -----------------------------------------------------
-// Verifikasi atau tolak donasi
-// -----------------------------------------------------
 async function verifikasi(donasiId, statusAkhir) {
-  console.log('[Verifikasi] START - donasiId:', donasiId, 'statusAkhir:', statusAkhir);
-  
-  if (!confirm(`Yakin ingin menandai donasi ini sebagai "${statusAkhir}"?`)) {
-    console.log('[Verifikasi] User cancelled');
-    return;
-  }
+  if (!confirm(`Yakin ingin menandai donasi ini sebagai "${statusAkhir}"?`)) return;
   try {
-    console.log('[Verifikasi] Updating database...');
-    
-    // 1. Update status donasi
-    const { error: e1 } = await window.sb
-      .from('donasi')
-      .update({ status_bayar: statusAkhir })
-      .eq('id', donasiId);
-    if (e1) throw e1;
-    console.log('[Verifikasi] Database donasi update SUCCESS');
-
-    // 2. Update status pembayaran (verified/rejected)
-    const statusBayar = statusAkhir === 'berhasil' ? 'verified' : 'rejected';
-    const { error: e2 } = await window.sb
-      .from('pembayaran')
-      .update({ status: statusBayar })
-      .eq('id_donasi', donasiId);
-    if (e2) throw e2;
-    console.log('[Verifikasi] Database pembayaran update SUCCESS');
+    await window.api.post('/admin.php?action=donasi_verifikasi', {
+      id: donasiId,
+      status_bayar: statusAkhir
+    });
 
     showAlert('success', `Donasi #${donasiId} ditandai sebagai "${statusAkhir}".`);
     
-    // Update local data & DOM langsung (instant, tidak perlu refresh)
-    const idx = semuaDonasi.findIndex(d => d.id === donasiId);
-    console.log('[Verifikasi] Update local - idx:', idx, 'total donasi:', semuaDonasi.length);
-    
+    const idx = semuaDonasi.findIndex(d => Number(d.id) === Number(donasiId));
     if (idx >= 0) {
-      console.log('[Verifikasi] Before update:', {
-        id: semuaDonasi[idx].id,
-        status_bayar_before: semuaDonasi[idx].status_bayar,
-        statusAkhir: statusAkhir
-      });
-      
       semuaDonasi[idx].status_bayar = statusAkhir;
-      
-      console.log('[Verifikasi] After update:', {
-        id: semuaDonasi[idx].id,
-        status_bayar_after: semuaDonasi[idx].status_bayar
-      });
-      
-      // Sync pembayaran status juga
-      const statusBayar = statusAkhir === 'berhasil' ? 'verified' : 'rejected';
       if (semuaDonasi[idx].pembayaran[0]) {
-        semuaDonasi[idx].pembayaran[0].status = statusBayar;
+        semuaDonasi[idx].pembayaran[0].status = statusAkhir === 'berhasil' ? 'verified' : 'rejected';
       }
     }
-    
-    console.log('[Verifikasi] Calling renderTabel()...');
-    // Render ulang dengan filter tetap dipertahankan
     renderTabel();
-    console.log('[Verifikasi] renderTabel() finished');
-    
   } catch (err) {
     console.error('[Verifikasi] CATCH ERROR:', err);
     showAlert('error', 'Gagal memperbarui status: ' + err.message);
   }
 }
 
-// Expose untuk onclick inline
 window.verifikasi = verifikasi;
 
-// Global untuk store bukti URL
 let currentBuktiUrl = null;
 
-// Preview bukti transfer
 function previewBukti(url) {
   const modal = document.getElementById('modal-bukti');
   const filename = document.getElementById('modal-bukti-filename');
-  
-  // Extract filename dari URL
   const urlObj = new URL(url, window.location.origin);
   const parts = urlObj.pathname.split('/');
   const name = parts[parts.length - 1] || 'bukti_transfer';
@@ -173,31 +104,22 @@ function previewBukti(url) {
   currentBuktiUrl = url;
   modal.style.display = 'flex';
   
-  // Close when clicking outside
   modal.onclick = (e) => {
     if (e.target === modal) modal.style.display = 'none';
   };
 }
 
-// Download bukti
 function downloadBukti() {
   if (!currentBuktiUrl) {
     alert('URL file tidak ditemukan');
     return;
   }
-  
-  try {
-    // Buat temporary link dan trigger download
-    const link = document.createElement('a');
-    link.href = currentBuktiUrl;
-    link.download = 'bukti_transfer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  } catch (err) {
-    console.error('Download error:', err);
-    alert('Gagal download: ' + err.message);
-  }
+  const link = document.createElement('a');
+  link.href = currentBuktiUrl;
+  link.download = 'bukti_transfer';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 window.previewBukti = previewBukti;

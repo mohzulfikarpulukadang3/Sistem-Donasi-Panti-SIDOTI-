@@ -1,6 +1,3 @@
-// =====================================================
-// SIDOTI - Halaman Riwayat Donasi
-// =====================================================
 let semuaDonasi = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -14,16 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadRiwayat() {
   try {
-    const { data, error } = await window.sb
-      .from('donasi')
-      .select(`
-        id, nominal, status_bayar, tanggal, pesan,
-        panti: id_panti (nama_panti),
-        pembayaran: pembayaran (id, status, bukti)
-      `)
-      .order('tanggal', { ascending: false });
-    if (error) throw error;
-    semuaDonasi = data || [];
+    semuaDonasi = await window.api.get('/donasi.php?action=riwayat');
     renderTabel();
   } catch (err) {
     console.error('[Riwayat] Gagal memuat:', err);
@@ -38,7 +26,7 @@ function renderTabel() {
   const body = document.getElementById('riwayat-body');
 
   let list = semuaDonasi;
-  if (cari) list = list.filter(d => (d.panti?.nama_panti || '').toLowerCase().includes(cari));
+  if (cari) list = list.filter(d => (d.nama_panti || '').toLowerCase().includes(cari));
   if (status) list = list.filter(d => d.status_bayar === status);
 
   if (!list.length) {
@@ -51,17 +39,15 @@ function renderTabel() {
   }
 
   body.innerHTML = list.map(d => {
-    const namaPanti = d.panti?.nama_panti || '-';
-    const bayar = (d.pembayaran && d.pembayaran[0]) || null;
-    const buktiCell = bayar && bayar.bukti
-      ? `<a href="${escapeHtml(bayar.bukti)}" target="_blank" class="btn btn-ghost btn-sm">Lihat</a>`
+    const buktiCell = d.bukti
+      ? `<a href="${escapeHtml(d.bukti)}" target="_blank" class="btn btn-ghost btn-sm">Lihat</a>`
       : '<span class="muted">Belum</span>';
     const aksi = d.status_bayar === 'menunggu'
       ? `<a href="/pembayaran.html?id=${d.id}" class="btn btn-outline btn-sm">Unggah Bukti</a>`
       : '<span class="muted">Selesai</span>';
     return `<tr>
       <td>${formatTanggal(d.tanggal)}</td>
-      <td>${escapeHtml(namaPanti)}</td>
+      <td>${escapeHtml(d.nama_panti || '-')}</td>
       <td><strong>${formatRupiah(d.nominal)}</strong></td>
       <td><span class="badge ${statusBadgeClass(d.status_bayar)}">${d.status_bayar}</span></td>
       <td>${buktiCell}</td>

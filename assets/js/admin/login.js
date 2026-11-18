@@ -1,5 +1,5 @@
 // =====================================================
-// SIDOTI - Login Admin
+// SIDOTI - Login Admin (assets/js/admin/login.js)
 // =====================================================
 document.addEventListener('DOMContentLoaded', async () => {
   await renderNavbar();
@@ -13,20 +13,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.disabled = true; btn.textContent = 'Memproses...';
 
     try {
-      const { data, error } = await window.sb.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-
-      // Cek apakah user ini admin
-      const { data: isAdmin, error: errAdmin } = await window.sb.rpc('is_admin');
-      if (errAdmin || !isAdmin) {
-        // Bukan admin, logout supaya tidak tertinggal sesi non-admin
-        await window.sb.auth.signOut();
-        throw new Error('Akun ini bukan admin.');
-      }
-
-      window.location.href = '/admin/';
+      await window.api.post('/auth.php?action=login_admin', { email, password });
+      window.location.href = '/admin/index.html';
     } catch (err) {
-      showAlert('error', 'Login gagal: ' + (err.message || 'kredensial salah'));
+      showAlert('error', 'Login gagal: ' + err.message);
     } finally {
       btn.disabled = false; btn.textContent = 'Masuk';
     }

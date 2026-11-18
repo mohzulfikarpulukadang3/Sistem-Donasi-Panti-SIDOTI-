@@ -1,74 +1,69 @@
+// Cache status sesi sementara di halaman agar tidak fetch berulang kali
+let _cachedSession = null;
+
+async function getSessionData(forceRefresh = false) {
+  if (_cachedSession && !forceRefresh) return _cachedSession;
+  try {
+    _cachedSession = await window.api.get('/auth.php?action=me');
+    return _cachedSession;
+  } catch (err) {
+    console.error('[SIDOTI] Gagal mengambil sesi:', err);
+    return { user: null, role: null, profile: null };
+  }
+}
+
 // Ambil user yang sedang login (atau null bila belum login)
 async function getCurrentUser() {
-  if (!window.sb) return null;
-  try {
-    const { data: { user } } = await window.sb.auth.getUser();
-    return user || null;
-  } catch (err) {
-    console.error('[SIDOTI] Gagal mengambil user:', err);
-    return null;
-  }
+  const session = await getSessionData();
+  return session.user || null;
 }
 
-// Ambil profil donatur dari tabel `donatur` untuk user yang login
+// Ambil profil donatur untuk user yang login
 async function getCurrentDonatur() {
-  const user = await getCurrentUser();
-  if (!user) return null;
-  const { data, error } = await window.sb
-    .from('donatur')
-    .select('*')
-    .eq('id', user.id)
-    .maybeSingle();
-  if (error) {
-    console.error('[SIDOTI] Gagal mengambil profil donatur:', error);
-    return null;
-  }
-  return data;
+  const session = await getSessionData();
+  if (session.role !== 'donatur') return null;
+  return session.profile || null;
 }
 
-// Wajib login donatur. Alihkan ke /login bila belum.
+// Wajib login donatur. Alihkan ke /login.html bila belum.
 async function requireDonatur() {
-  const user = await getCurrentUser();
-  if (!user) {
+  const session = await getSessionData();
+  if (!session.user || session.role !== 'donatur') {
     window.location.href = '/login.html?redirect=' +
       encodeURIComponent(window.location.pathname + window.location.search);
     return null;
   }
-  return user;
+  return session.user;
 }
 
 // Wajib admin. Alihkan bila bukan admin.
 async function requireAdmin() {
-  const user = await getCurrentUser();
-  if (!user) {
+  const session = await getSessionData();
+  if (!session.user) {
     window.location.href = '/admin/login.html';
     return null;
   }
-  const { data, error } = await window.sb.rpc('is_admin');
-  if (error || !data) {
+  if (session.role !== 'admin') {
     alert('Akses ditolak. Halaman ini hanya untuk admin.');
     window.location.href = '/';
     return null;
   }
-  return user;
+  return session.user;
 }
 
 // Logout dan kembali ke beranda
 async function logout() {
-  if (!window.sb) {
-    window.location.href = '/';
-    return;
-  }
   try {
-    await window.sb.auth.signOut();
+    await window.api.post('/auth.php?action=logout');
   } catch (err) {
     console.error('[SIDOTI] Gagal logout:', err);
   }
+  _cachedSession = null;
   window.location.href = '/';
 }
 
 // =====================================================
-// Util format
+// Util format (Tetap sama seperti aslinya)
 // =====================================================
 function formatRupiah(num) {
   const n = Number(num) || 0;
@@ -98,7 +93,6 @@ function formatTanggalWaktu(iso) {
   }
 }
 
-// Status badge kelas CSS
 function statusBadgeClass(status) {
   switch ((status || '').toLowerCase()) {
     case 'berhasil': case 'verified': return 'badge-success';
@@ -108,7 +102,6 @@ function statusBadgeClass(status) {
   }
 }
 
-// Escape HTML untuk mencegah XSS saat menampilkan data
 function escapeHtml(str) {
   if (str == null) return '';
   return String(str)
@@ -119,7 +112,6 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-// Helper: get initials dari nama (ambil 2 huruf pertama)
 function getInitials(fullName) {
   if (!fullName) return 'U';
   const parts = fullName.trim().split(' ');
@@ -127,21 +119,16 @@ function getInitials(fullName) {
 }
 
 // =====================================================
-// Navbar dinamis (dirender ke elemen dengan id="navbar")
+// Navbar dinamis
 // ===================================================== 
 async function renderNavbar() {
   const el = document.getElementById('navbar');
   if (!el) return;
-  const user = await getCurrentUser();
-  let admin = false;
-  let donatur = null;
-  if (user) {
-    const { data } = await window.sb.rpc('is_admin');
-    admin = !!data;
-    if (!admin) {
-      donatur = await getCurrentDonatur();
-    }
-  }
+  
+  const session = await getSessionData();
+  const user    = session.user;
+  const admin   = session.role === 'admin';
+  const donatur = session.profile;
 
   const pubLinks = `
     <a href="/panti.html" class="nav-link">Info Panti</a>
@@ -155,7 +142,7 @@ async function renderNavbar() {
       <a href="/admin/" class="nav-link">Admin</a>
       <button id="btn-logout" class="btn btn-ghost btn-sm">Keluar</button>`;
   } else {
-    const userName = donatur?.full_name || user.email?.split('@')[0] || 'Donatur';
+    const userName = donatur?.nama || user.nama || user.email?.split('@')[0] || 'Donatur';
     const initials = getInitials(userName);
     akunLink = `
       <a href="/riwayat.html" class="nav-link">Riwayat Donasi</a>
@@ -169,18 +156,31 @@ async function renderNavbar() {
       </div>
       <button id="btn-logout" class="btn btn-ghost btn-sm">Keluar</button>`;
   }
-
+const path = window.location.pathname;
   el.innerHTML = `
     <div class="nav-brand">
       <a href="/">
-        <span class="brand-mark">🤝</span>
+        <img src="/assets/img/logo-sidoti.png" alt="Logo SIDOTI" class="brand-logo-img" />
         <div class="brand-mark-text">
           <div>SIDOTI</div>
-          <div class="brand-sub">Sistem Donasi Panti Asuhan</div>
+          <div class="brand-sub">SISTEM DONASI PANTI</div>
         </div>
       </a>
     </div>
-    <nav class="nav-links">${pubLinks}${akunLink}</nav>`;
+    <nav class="nav-links">
+      <a href="/" class="nav-link ${path === '/' || path === '/index.html' ? 'active' : ''}">Beranda</a>
+      <a href="/panti.html" class="nav-link ${path.includes('panti') ? 'active' : ''}">Panti Asuhan</a>
+      <a href="/laporan.html" class="nav-link ${path.includes('laporan') ? 'active' : ''}">Laporan</a>
+      ${user ? `
+        <a href="/riwayat.html" class="nav-link ${path.includes('riwayat') ? 'active' : ''}">Riwayat</a>
+        <a href="/donasi.html" class="btn btn-primary btn-sm">Donasi</a>
+        <button id="btn-logout" class="btn btn-ghost btn-sm" type="button">Keluar</button>
+      ` : `
+        <a href="/login.html" class="btn btn-outline btn-sm">Masuk</a>
+        <a href="/donasi.html" class="btn btn-primary btn-sm">Donasi Sekarang</a>
+      `}
+    </nav>
+  `;
 
   const btnLogout = document.getElementById('btn-logout');
   if (btnLogout) btnLogout.addEventListener('click', logout);
